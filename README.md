@@ -74,7 +74,7 @@ Don't forget to transfer Exif data to generated thumbnails!
 The Past and Future of Rawr
 ---
 
-I built Rawr as part of a home photography project, because I needed to quickly power through 20,000 CR2 files to generate thumbnail. Doing it by rendering the RAW out to a JPG using ImageMagick could've taken years.
+I built Rawr as part of a home photography project. I needed to quickly generate thumbnails for 22,000 CR2 files. Doing it by rendering the RAW out to a JPG using ImageMagick could've taken years.
  
 If the project helps you out, great! If you find issues with it, please contribute by either logging an issue or a PR on the project.
 
