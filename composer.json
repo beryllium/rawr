@@ -1,0 +1,22 @@
+{
+  "name": "beryllium/rawr",
+  "description": "Image processing library for RAW/CR2 files, providing a wrapper for exiv2 and exiftool",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Kevin Boyd",
+      "email": "kevin.boyd@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Beryllium\\Rawr\\": ""
+    }
+  },
+  "minimum-stability": "dev",
+  "require": {},
+  "require-dev": {
+    "phpunit/phpunit": "^4.0"
+  }
+}
