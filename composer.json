@@ -1,6 +1,7 @@
 {
   "name": "beryllium/rawr",
   "description": "Image processing library for RAW/CR2 files, providing a wrapper for exiv2 and exiftool",
+  "keywords": ["exiv2", "exiv", "exiftool", "raw", "photo", "exif", "cr2", "rawr"],
   "type": "library",
   "license": "MIT",
   "authors": [
