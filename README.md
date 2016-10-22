@@ -1,81 +1,127 @@
 Rawr
-===
+=== 
+ 
+**Rawr** is a PHP wrapper for the `exiv` and `exiftool` command-line utilities. It enables Preview Extraction, EXIF Data Examination, and EXIF Data Transfer to other image files.
 
-Rawr is a library for working with Canon CR2 images from within PHP. It wraps `exiv` and `exiftool` to enable Preview Extraction, Exif Data Examination, and Exif Data Transfer to other image files.
+In short: **Rawr** makes it easier to work with Canon CR2 (RAW) images from within PHP.
 
-Why Do I Need Rawr?
+Installation Requirements
 ---
 
-It turns out that PHP is pretty unfriendly for generating thumbnails from RAW photos. Even if you can get it to work, it still takes an unreasonable (albeit probably unavoidable) amount of time for larger images. A handy shortcut is being able to extract the camera's own embedded JPEG preview from the RAW photo. Batch thumbnail generation will be much faster with this approach.
-
-Also, the resulting extracted preview will lack the Exif data of the original RAW photo. This also seems to happen when generating thumbnails based off of the extracted preview.
-
-Rawr gives you the ability to list and extract the previews, as well as examine and transfer the Exif data from the original RAW photo to the extracted preview (as well as any derived thumbnails).
-
-What Are Rawr's Requirements?
----
-
-Rawr requires access to the `exiv2` tool in order to list and extract previews.
-
-Rawr also requires read/write access to a sandbox folder to perform operations in.
-
-Optionally, Rawr can use the `exiftool` utility to transfer Exif data between files.
-
-Rawr is written for PHP 5.4 and above.
-
-Running the unit test suite requires the php-exif extension, and for `exiv2` and `exiftool` to be present in your path.
+* PHP 5.4+ or PHP 7
+* A writeable temporary folder for performing operations
+* System Binaries
+  * **`exiv2`** to list and extract previews.
+  * **`exiftool`** to transfer EXIF data between files.
+  
+Running the unit test suite requires both `exiv2` and `exiftool` present in your path. Testing EXIF data transfer requires the `php-exif` extension; these tests will be skipped if the extension is not found.
 
 Adding Rawr To Your Project
 ---
 
-Require Rawr with Composer:
+Require **Rawr** with Composer:
 
     composer require beryllium/rawr
     
-Then, in your code, instantiate Rawr:
+Then, in your code, instantiate **Rawr**:
 
     $rawr = new Beryllium\Rawr\Rawr('path/to/sandbox', 'path/to/exiv2', 'path/to/exiftool');
 
 (You can leave off the exiftool value if you are not interested in transferring Exif data.)
 
-Using Rawr
+Why Do I Need Rawr?
 ---
 
-To list all previews embedded in a CR2 file:
+### Faster Thumbnails for RAW Photos
 
-    print_r($rawr->listPreviews('path/to/IMAGE.CR2'));
-    
-To extract preview #3:
+Generating thumbnails from RAW photos in PHP is *very* slow. It's also clunky to wire up Imagick to get the proper output.
 
-    $previewFile = $rawr->extractPreview('path/to/IMAGE.CR2', 3);
-    
-To list Exif data:
+Each RAW photo actually has one or more built-in JPG previews stored alongside the camera's raw sensor data. Extracting this preview is a handy shortcut for avoiding PHP's slowness. Batch thumbnail operations are much faster with this approach.
 
-    // raw format
-    print_r($rawr->listExifData('path/to/IMAGE.CR2'));
-    
-    // translated format
-    print_r($rawr->listExifData('path/to/IMAGE.CR2', Rawr::EXIF_TRANSLATED));
-    
-To transfer Exif data to another image:
+**Rawr** can list previews:
 
-    // to any jpg
-    $rawr->transferExifData('path/to/IMAGE.CR2', 'path/to/new_thumbnail.jpg');
-    
-    // to the preview image you extracted
-    $rawr->transferExifData('path/to/IMAGE.CR2', $preview);
-    
-Keep in mind that transferring Exif data can be slow. Expect it to take one or two seconds per call.
+~~~
+$rawr->listPreviews('path/to/IMAGE.CR2')
+~~~
 
-You'll want to move the extracted preview out of the sandbox if you want to preserve it. If you're just using it to generate thumbnails, you can leave it in the sandbox and locate the thumbnails elsewhere (and then unlink the preview in the sandbox when you're done).
+The preview list is an array containing information about each preview. Typically, there is a full-size preview in addition to one or more smaller thumbnails.
+
+The example output below demonstrates:
+
+-  **1**: 160x120 JPG
+-  **2**: 668x432 TIFF
+-  **3**: 5184x3456 JPG (the full-sized preview) 
+
+~~~
+array(
+    array(
+        'index'  => 1,
+        'type'   => 'image/jpeg',
+        'height' => 120,
+        'width'  => 160,
+        'size'   => 14416,
+    ),
+    array(
+        'index'  => 2,
+        'type'   => 'image/tiff',
+        'height' => 432,
+        'width'  => 668,
+        'size'   => 1731456,
+    ),
+    array(
+        'index'  => 3,
+        'type'   => 'image/jpeg',
+        'height' => 3456,
+        'width'  => 5184,
+        'size'   => 1869241,
+    ),
+);
+~~~
+
+**Rawr** can extract individual previews:
+
+~~~
+// extracts the specified preview to the sandbox location and returns the resulting temporary filename 
+$previewFile = $rawr->extractPreview('path/to/IMAGE.CR2', 3)
+~~~
+
+You'll want to move the extracted `$previewFile` out of the sandbox if you want to preserve it. If you're just using it to generate thumbnails, you can leave it in the sandbox and locate the thumbnails elsewhere (and then unlink the `$previewFile` when you're done).
 
 Don't forget to transfer Exif data to generated thumbnails!
+
+### Preserving EXIF Data
+
+Every image taken with your digital camera has special data embedded in the file. This data records the time, camera settings, and even portrait/landscape settings for that image. With some newer cameras, the data can also include GPS coordinates.
+
+Extracting the preview, or even generating a thumbnail from the extracted preview, can result in the loss of this data. Imagick and PHP do not seem to preserve it properly.
+
+**Rawr** can transfer the EXIF data from the original CR2 file to a JPG:
+
+~~~
+// to any jpg file
+$rawr->transferExifData('path/to/IMAGE.CR2', 'path/to/new_thumbnail.jpg');
+
+// to the preview image you extracted
+$rawr->transferExifData('path/to/IMAGE.CR2', $previewFile);
+~~~
+
+Keep in mind that transferring Exif data can be slow. Expect it to take one or two seconds per call, depending on server CPU/RAM/Disk speed.
+
+**Rawr** can extract the EXIF data into a consumable format, allowing you to make decisions based on the data:
+
+~~~
+// translated format
+$translatedData = $rawr->listExifData('path/to/IMAGE.CR2', Rawr::EXIF_TRANSLATED);
+
+// raw format
+$data = $rawr->listExifData('path/to/IMAGE.CR2');
+~~~
 
 The Past and Future of Rawr
 ---
 
-I built Rawr as part of a home photography project. I needed to quickly generate thumbnails for 22,000 CR2 files. Doing it by rendering the RAW out to a JPG using ImageMagick could've taken years.
+I built **Rawr** as part of a home photography project. I needed to quickly generate thumbnails for 22,000 CR2 files. Doing it by rendering the RAW out to a JPG using ImageMagick could've taken years.
  
 If the project helps you out, great! If you find issues with it, please contribute by either logging an issue or a PR on the project.
 
-In the future, I would like to give it support for the Nikon RAW format (NEF), but I have not yet attempted that.
+In the future, I would like to support a wider variety of RAW formats.
