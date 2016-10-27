@@ -33,10 +33,10 @@ class Rawr
             throw new \RuntimeException('Not ready to extract previews');
         }
         if (!file_exists($cr2)) {
-            throw new InvalidArgumentException('File does not exist: ' . $cr2);
+            throw new \InvalidArgumentException('File does not exist: ' . $cr2);
         }
         $outputFile = $this->sandbox . '/' . basename($cr2);
-        $outputFile = str_ireplace('.cr2', '-preview3.jpg', $outputFile);
+        $outputFile = str_ireplace('.cr2', '-preview' . (int)$index . '.jpg', $outputFile);
         // exiv2 doesn't seem to have a quick fail, only a "force" option
         // we don't want to overwrite files by mistake, so we exit early
         if (file_exists($outputFile)) {
@@ -52,7 +52,7 @@ class Rawr
             . ' 2>&1 > /dev/null';
         exec($cmd);
         if (!file_exists($outputFile)) {
-            throw new RuntimeException('Extraction failed!');
+            throw new \RuntimeException('Extraction failed!');
         }
 
         return $outputFile;
@@ -115,7 +115,8 @@ class Rawr
             . ' -Pk'
             . ($type === static::EXIF_RAW ? 'v' : 't')
             . ' pr '
-            . escapeshellarg($cr2);
+            . escapeshellarg($cr2)
+            . ' 2> /dev/null';
         exec($cmd, $output);
 
         return $this->normalizeExifData($output);

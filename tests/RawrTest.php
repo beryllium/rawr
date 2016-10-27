@@ -214,7 +214,10 @@ class RawrText extends \PHPUnit_Framework_TestCase
             'Exif.Image3.StripByteCounts'                => '19975955',
             'Xmp.xmp.Rating'                             => '0',
         );
-        $this->assertSame($expected, $actual);
+
+        foreach ($expected as $key => $value) {
+            $this->assertSame($value, $actual[$key], 'Value mismatch for key ' . $key);
+        }
     }
 
     public function testCR2PreviewExtraction()
