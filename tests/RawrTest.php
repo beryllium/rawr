@@ -220,11 +220,12 @@ class RawrText extends \PHPUnit_Framework_TestCase
         }
     }
 
-    public function testCR2PreviewExtraction()
+    public function testCR2Preview3Extraction()
     {
         $rawr    = $this->getRawr();
         $preview = $rawr->extractPreview(ASSETS_DIR . '/TEST1.CR2', 3);
         $this->assertFileExists($preview);
+        $this->assertSame('TEST1-preview3.jpg', basename($preview));
         $actual   = getimagesize($preview);
         $expected = array(
             0          => 5184,
@@ -234,6 +235,23 @@ class RawrText extends \PHPUnit_Framework_TestCase
             'bits'     => 8,
             'channels' => 3,
             'mime'     => 'image/jpeg',
+        );
+        $this->assertSame($expected, $actual);
+    }
+
+    public function testCR2Preview2Extraction()
+    {
+        $rawr    = $this->getRawr();
+        $preview = $rawr->extractPreview(ASSETS_DIR . '/TEST1.CR2', 2);
+        $this->assertFileExists($preview);
+        $this->assertSame('TEST1-preview2.tif', basename($preview));
+        $actual   = getimagesize($preview);
+        $expected = array(
+            0      => 668,
+            1      => 432,
+            2      => 7,
+            3      => 'width="668" height="432"',
+            'mime' => 'image/tiff',
         );
         $this->assertSame($expected, $actual);
     }

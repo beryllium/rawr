@@ -35,8 +35,20 @@ class Rawr
         if (!file_exists($cr2)) {
             throw new \InvalidArgumentException('File does not exist: ' . $cr2);
         }
+
+        // determine the extension by checking the mimetype
+        // but of course, we have to convert the index to a zero-based lookup
+        $previews  = $this->listPreviews($cr2);
+        $previewId = ((int)$index) - 1;
+        if (empty($previews[$previewId]['type']) || $previewId < 0) {
+            throw new \InvalidArgumentException('Preview ' . $previewId . ' does not exist');
+        }
+        $outputExtension = $this->getExtensionFromType($previews[$previewId]['type']);
+
+        // build the full filename
         $outputFile = $this->sandbox . '/' . basename($cr2);
-        $outputFile = str_ireplace('.cr2', '-preview' . (int)$index . '.jpg', $outputFile);
+        $outputFile = str_ireplace('.cr2', '-preview' . (int)$index . '.' . $outputExtension, $outputFile);
+
         // exiv2 doesn't seem to have a quick fail, only a "force" option
         // we don't want to overwrite files by mistake, so we exit early
         if (file_exists($outputFile)) {
@@ -165,5 +177,18 @@ class Rawr
             . ' '
             . escapeshellarg($destination);
         exec($cmd, $output);
+    }
+
+    public function getExtensionFromType($type)
+    {
+        switch (strtolower($type)) {
+            default:
+            case 'image/jpg':
+            case 'image/jpeg':
+                return 'jpg';
+            case 'image/tiff':
+            case 'image/tif':   // This isn't really a thing.
+                return 'tif';
+        }
     }
 }
