@@ -2,7 +2,7 @@
 
 use \Beryllium\Rawr\Rawr;
 
-class RawrText extends \PHPUnit_Framework_TestCase
+class RawrTest extends \PHPUnit_Framework_TestCase
 {
     public function testRawr()
     {
